@@ -62,7 +62,7 @@
     if(!running||paused)return;
     if(a==='left'&&!collision(piece,-1,0))piece.x--;
     if(a==='right'&&!collision(piece,1,0))piece.x++;
-    if(a==='down'){if(!collision(piece,0,1)){piece.y++;score++;}else lock();stats();}
+    if(a==='down'){if(!collision(piece,0,1)){piece.y++;}else lock();stats();}
     if(a==='rotate'){const m=piece.m[0].map((_,i)=>piece.m.map(r=>r[i]).reverse());for(const d of [0,-1,1,-2,2])if(!collision(piece,d,0,m)){piece.x+=d;piece.m=m;break;}}
     if(a==='drop'){while(!collision(piece,0,1))piece.y++;lock();}
     draw();
