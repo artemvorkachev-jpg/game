@@ -8,38 +8,76 @@
 <aside><section class="panel"><h2>Следующая</h2><canvas id="next" width="120" height="90"></canvas></section><section class="panel"><h2>Очки</h2><div class="score" id="score">0</div><div class="stats"><div><small>Линии</small><strong id="lines">0</strong></div><div><small>Уровень</small><strong id="level">1</strong></div><div><small>Рекорд</small><strong id="best">0</strong></div></div></section><section class="panel actions"><button type="button" class="primary" id="start" onclick="window.startTetris && window.startTetris()">▶ Старт / заново</button><button type="button" id="pause">Ⅱ Пауза</button><p class="hint">← → движение · ↑ поворот · пробел — сброс</p></section></aside></div>
 <div class="mobile"><button data-a="left" aria-label="Влево">←</button><button data-a="rotate" aria-label="Повернуть">↻</button><button data-a="right" aria-label="Вправо">→</button><button data-a="down" aria-label="Вниз">↓</button><button class="wide" data-a="drop">Сбросить</button><button class="wide" data-a="pause">Пауза</button></div><div class="status" id="status" role="status" aria-live="polite">Можно играть клавишами или кнопками.</div><footer>Работает в браузере — установка не нужна.</footer></main>
 <script>
-/* Independent click diagnostic and start fallback */
-document.addEventListener('click',function(e){
-  const b=e.target.closest && e.target.closest('#start,#ovbtn');
-  if(!b)return;
-  e.preventDefault();
-  e.stopImmediatePropagation();
-  if(typeof window.startTetris==='function'){
-    window.startTetris();
-  }else{
-    const s=document.getElementById('status');
-    if(s)s.textContent='Кнопка нажалась, но игровой код не загрузился. Перезагрузи страницу; если сообщение останется, напиши мне.';
+(function(){
+  const $=id=>document.getElementById(id);
+  const board=$('board'), ctx=board.getContext('2d');
+  const nextCanvas=$('next'), nctx=nextCanvas.getContext('2d');
+  const W=10,H=20,S=30;
+  const shapes={
+    I:[[1,1,1,1]],O:[[1,1],[1,1]],T:[[0,1,0],[1,1,1]],
+    S:[[0,1,1],[1,1,0]],Z:[[1,1,0],[0,1,1]],
+    J:[[1,0,0],[1,1,1]],L:[[0,0,1],[1,1,1]]
+  };
+  const colors={I:'#37d9f5',O:'#ffcf4a',T:'#ad79ff',S:'#5ce39a',Z:'#ff668d',J:'#5b91ff',L:'#ff9c54'};
+  let grid,piece,next,score=0,lines=0,level=1,best=0,running=false,paused=false,raf=0,last=0,acc=0;
+  const copy=m=>m.map(r=>r.slice());
+  function randomPiece(){const keys=Object.keys(shapes),t=keys[Math.floor(Math.random()*keys.length)];return {t,m:copy(shapes[t]),x:Math.floor((W-shapes[t][0].length)/2),y:0};}
+  function collision(p,dx=0,dy=0,m=p.m){
+    for(let y=0;y<m.length;y++)for(let x=0;x<m[y].length;x++)if(m[y][x]){
+      const xx=p.x+x+dx, yy=p.y+y+dy;
+      if(xx<0||xx>=W||yy>=H||(yy>=0&&grid[yy][xx]))return true;
+    } return false;
   }
-},true);
-</script>
-<script>
-window.addEventListener('error',e=>{const s=document.getElementById('status');if(s)s.textContent='Ошибка запуска: '+e.message});
-(()=>{const C=10,R=20,S=30,colors={I:'#37d9f5',O:'#ffcf4a',T:'#ad79ff',S:'#5ce39a',Z:'#ff668d',J:'#5b91ff',L:'#ff9c54'},shapes={I:[[1,1,1,1]],O:[[1,1],[1,1]],T:[[0,1,0],[1,1,1]],S:[[0,1,1],[1,1,0]],Z:[[1,1,0],[0,1,1]],J:[[1,0,0],[1,1,1]],L:[[0,0,1],[1,1,1]}};
-const $=id=>document.getElementById(id),cv=$('board'),cx=cv.getContext('2d'),nv=$('next'),nx=nv.getContext('2d');let grid,p,next,score=0,lines=0,level=1,best=0,running=false,paused=false,over=false,last=0,acc=0,raf=0;
-try{best=+(localStorage.getItem('tetrisBest')||0)}catch{}$('best').textContent=best;
-function clone(m){return m.map(r=>r.slice())}function rand(){let t=Object.keys(shapes);t=t[Math.random()*t.length|0];return{t,m:clone(shapes[t]),x:4,y:0}}
-function fresh(){grid=Array.from({length:R},()=>Array(C).fill(''));score=lines=0;level=1;p=rand();next=rand();running=true;paused=over=false;last=acc=0;$('overlay').hidden=true;$('pause').textContent='Ⅱ Пауза';$('status').textContent='Удачи!';stats();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}window.startTetris=fresh;
-function hit(q,dx=0,dy=0,m=q.m){for(let y=0;y<m.length;y++)for(let x=0;x<m[y].length;x++)if(m[y][x]){let xx=q.x+x+dx,yy=q.y+y+dy;if(xx<0||xx>=C||yy>=R||(yy>=0&&grid[yy][xx]))return true}return false}
-function cell(ctx,color,x,y,size){ctx.fillStyle=color;ctx.fillRect(x*size+1,y*size+1,size-2,size-2);ctx.fillStyle='#ffffff35';ctx.fillRect(x*size+3,y*size+3,size-6,Math.max(3,size*.13))}
-function draw(){cx.fillStyle='#0c1022';cx.fillRect(0,0,300,600);cx.strokeStyle='#252b49';for(let x=0;x<=C;x++){cx.beginPath();cx.moveTo(x*S,0);cx.lineTo(x*S,600);cx.stroke()}for(let y=0;y<=R;y++){cx.beginPath();cx.moveTo(0,y*S);cx.lineTo(300,y*S);cx.stroke()}if(grid)grid.forEach((row,y)=>row.forEach((c,x)=>{if(c)cell(cx,c,x,y,S)}));if(p){let ghost={...p};while(!hit(ghost,0,1))ghost.y++;ghost.m.forEach((r,y)=>r.forEach((v,x)=>{if(v){cx.globalAlpha=.2;cell(cx,colors[ghost.t],ghost.x+x,ghost.y+y,S);cx.globalAlpha=1}}));p.m.forEach((r,y)=>r.forEach((v,x)=>{if(v)cell(cx,colors[p.t],p.x+x,p.y+y,S)}))}}
-function drawNext(){nx.fillStyle='#0c1022';nx.fillRect(0,0,120,90);if(!next)return;let size=20,ox=(120-next.m[0].length*size)/2,oy=(90-next.m.length*size)/2;next.m.forEach((r,y)=>r.forEach((v,x)=>{if(v){nx.fillStyle=colors[next.t];nx.fillRect(ox+x*size+1,oy+y*size+1,size-3,size-3)}}))}
-function stats(){ $('score').textContent=score;$('lines').textContent=lines;$('level').textContent=level;$('best').textContent=best;drawNext()}
-function lock(){p.m.forEach((r,y)=>r.forEach((v,x)=>{if(v&&p.y+y>=0)grid[p.y+y][p.x+x]=colors[p.t]}));let n=0;for(let y=R-1;y>=0;y--)if(grid[y].every(Boolean)){grid.splice(y,1);grid.unshift(Array(C).fill(''));n++;y++}if(n){score+=([0,100,300,500,800][n]||800)*level;lines+=n;level=1+(lines/10|0);$('status').textContent=['','Отлично!','Две линии!','Тройная!','ТЕТРИС!'][n]||'Линии очищены!'}if(score>best){best=score;try{localStorage.setItem('tetrisBest',best)}catch{}}p=next;next=rand();if(hit(p))end();stats()}
-function end(){running=false;over=true;$('overlay').hidden=false;$('ovtitle').textContent='Игра окончена';$('ovtext').textContent='Очки: '+score+' · Линии: '+lines;$('ovbtn').textContent='Играть ещё';$('status').textContent='Конец игры — попробуй ещё раз.'}
-function act(a){if(a==='pause'){if(!running)return;paused=!paused;$('overlay').hidden=!paused;$('pause').textContent=paused?'▶ Продолжить':'Ⅱ Пауза';if(paused){$('ovtitle').textContent='Пауза';$('ovtext').textContent='Продолжи, когда будешь готов.';$('ovbtn').textContent='Продолжить'}else{last=0;raf=requestAnimationFrame(loop)}return}if(!running||paused)return;if(a==='left'&&!hit(p,-1))p.x--;if(a==='right'&&!hit(p,1))p.x++;if(a==='down'){if(!hit(p,0,1)){p.y++;score++}else lock();stats()}if(a==='rotate'){let m=p.m[0].map((_,i)=>p.m.map(r=>r[i]).reverse());for(let d of [0,-1,1,-2,2])if(!hit(p,d,0,m)){p.x+=d;p.m=m;break}}if(a==='drop'){let d=0;while(!hit(p,0,1)){p.y++;d++}score+=d*2;lock()}draw()}
-function loop(t=0){if(!running||paused)return;acc+=last?t-last:0;last=t;if(acc>Math.max(90,800-(level-1)*65)){if(!hit(p,0,1))p.y++;else lock();acc=0}draw();raf=requestAnimationFrame(loop)}
-document.addEventListener('keydown',e=>{let map={ArrowLeft:'left',ArrowRight:'right',ArrowDown:'down',ArrowUp:'rotate',' ':'drop',a:'left',d:'right',s:'down',w:'rotate',p:'pause',Escape:'pause'};if(map[e.key]){e.preventDefault();act(map[e.key])}if(e.key==='Enter'&&(!running||over))fresh()});
-document.querySelectorAll('[data-a]').forEach(b=>{b.addEventListener('click',()=>act(b.dataset.a));let timer;b.addEventListener('pointerdown',e=>{if(['left','right','down'].includes(b.dataset.a)){e.preventDefault();act(b.dataset.a);timer=setInterval(()=>act(b.dataset.a),130)}});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>clearInterval(timer)))});
-$('start').addEventListener('click',e=>{e.preventDefault();fresh()});$('pause').addEventListener('click',e=>{e.preventDefault();act('pause')});$('ovbtn').addEventListener('click',e=>{e.preventDefault();if(paused)act('pause');else fresh()});grid=Array.from({length:R},()=>Array(C).fill(''));p=null;next=rand();draw();drawNext();
+  function drawCell(c,color,x,y,size){c.fillStyle=color;c.fillRect(x*size+1,y*size+1,size-2,size-2);}
+  function draw(){
+    ctx.fillStyle='#0c1022';ctx.fillRect(0,0,300,600);ctx.strokeStyle='#252b49';
+    for(let x=0;x<=W;x++){ctx.beginPath();ctx.moveTo(x*S,0);ctx.lineTo(x*S,600);ctx.stroke();}
+    for(let y=0;y<=H;y++){ctx.beginPath();ctx.moveTo(0,y*S);ctx.lineTo(300,y*S);ctx.stroke();}
+    if(grid)grid.forEach((row,y)=>row.forEach((color,x)=>{if(color)drawCell(ctx,color,x,y,S)}));
+    if(piece)piece.m.forEach((row,y)=>row.forEach((v,x)=>{if(v)drawCell(ctx,colors[piece.t],piece.x+x,piece.y+y,S)}));
+  }
+  function drawNext(){
+    nctx.fillStyle='#0c1022';nctx.fillRect(0,0,120,90);if(!next)return;
+    const size=20,ox=(120-next.m[0].length*size)/2,oy=(90-next.m.length*size)/2;
+    next.m.forEach((row,y)=>row.forEach((v,x)=>{if(v)drawCell(nctx,colors[next.t],(ox/size)+x,(oy/size)+y,size)}));
+  }
+  function stats(){$('score').textContent=score;$('lines').textContent=lines;$('level').textContent=level;$('best').textContent=best;drawNext();}
+  function showOverlay(title,desc,label){$('overlay').hidden=false;$('ovtitle').textContent=title;$('ovtext').textContent=desc;$('ovbtn').textContent=label;}
+  function start(){
+    grid=Array.from({length:H},()=>Array(W).fill(''));score=0;lines=0;level=1;
+    piece=randomPiece();next=randomPiece();running=true;paused=false;last=0;acc=0;
+    $('overlay').hidden=true;$('status').textContent='Удачи!';$('pause').textContent='Ⅱ Пауза';
+    stats();draw();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+  }
+  function finish(){running=false;showOverlay('Игра окончена','Очки: '+score+' · Линии: '+lines,'Играть ещё');$('status').textContent='Конец игры — попробуй ещё раз.';}
+  function lock(){
+    piece.m.forEach((row,y)=>row.forEach((v,x)=>{if(v&&piece.y+y>=0)grid[piece.y+y][piece.x+x]=colors[piece.t];}));
+    let n=0;for(let y=H-1;y>=0;y--)if(grid[y].every(Boolean)){grid.splice(y,1);grid.unshift(Array(W).fill(''));n++;y++;}
+    if(n){score+=([0,100,300,500,800][n]||800)*level;lines+=n;level=1+Math.floor(lines/10);}
+    if(score>best){best=score;try{localStorage.setItem('tetrisBest',String(best));}catch(e){}}
+    piece=next;next=randomPiece();if(collision(piece))finish();stats();
+  }
+  function action(a){
+    if(a==='pause'){if(!running)return;paused=!paused;if(paused){cancelAnimationFrame(raf);showOverlay('Пауза','Продолжи, когда будешь готов.','Продолжить');$('pause').textContent='▶ Продолжить';}else{$('overlay').hidden=true;$('pause').textContent='Ⅱ Пауза';last=0;raf=requestAnimationFrame(loop);}return;}
+    if(!running||paused)return;
+    if(a==='left'&&!collision(piece,-1,0))piece.x--;
+    if(a==='right'&&!collision(piece,1,0))piece.x++;
+    if(a==='down'){if(!collision(piece,0,1)){piece.y++;score++;}else lock();stats();}
+    if(a==='rotate'){const m=piece.m[0].map((_,i)=>piece.m.map(r=>r[i]).reverse());for(const d of [0,-1,1,-2,2])if(!collision(piece,d,0,m)){piece.x+=d;piece.m=m;break;}}
+    if(a==='drop'){while(!collision(piece,0,1))piece.y++;lock();}
+    draw();
+  }
+  function loop(t){if(!running||paused)return;acc+=last?t-last:0;last=t;if(acc>Math.max(90,800-(level-1)*65)){if(!collision(piece,0,1))piece.y++;else lock();acc=0;}draw();raf=requestAnimationFrame(loop);}
+  function safeStart(e){if(e)e.preventDefault();start();}
+  $('start').addEventListener('click',safeStart);
+  $('ovbtn').addEventListener('click',function(e){e.preventDefault();if(paused)action('pause');else start();});
+  $('pause').addEventListener('click',function(e){e.preventDefault();action('pause');});
+  document.querySelectorAll('[data-a]').forEach(b=>b.addEventListener('click',()=>action(b.dataset.a)));
+  document.addEventListener('keydown',e=>{const map={ArrowLeft:'left',ArrowRight:'right',ArrowDown:'down',ArrowUp:'rotate',' ':'drop',a:'left',d:'right',s:'down',w:'rotate',p:'pause',Escape:'pause'};if(map[e.key]){e.preventDefault();action(map[e.key]);}if(e.key==='Enter'&&!running)start();});
+  try{best=Number(localStorage.getItem('tetrisBest')||0);}catch(e){}
+  grid=Array.from({length:H},()=>Array(W).fill(''));next=randomPiece();stats();draw();
+  window.startTetris=start;
+  $('status').textContent='Код игры загружен. Нажми «Старт».';
+  window.addEventListener('error',e=>{$('status').textContent='Ошибка игры: '+e.message;});
 })();
 </script></body></html>
