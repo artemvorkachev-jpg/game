@@ -69,8 +69,8 @@
   }
   function loop(t){if(!running||paused)return;acc+=last?t-last:0;last=t;if(acc>Math.max(90,800-(level-1)*65)){if(!collision(piece,0,1))piece.y++;else lock();acc=0;}draw();raf=requestAnimationFrame(loop);}
   function safeStart(e){if(e)e.preventDefault();start();}
-  $('start').addEventListener('click',function(e){if(e)e.preventDefault();if(paused){action('pause');}else if(!running){start();}});
-  $('ovbtn').addEventListener('click',function(e){e.preventDefault();if(paused)action('pause');else start();});
+  $('start').addEventListener('click',function(e){if(e)e.preventDefault();if(running){if(paused)action('pause');return;}start();});
+  $('ovbtn').addEventListener('click',function(e){e.preventDefault();if(running){if(paused)action('pause');return;}start();});
   $('pause').addEventListener('click',function(e){e.preventDefault();action('pause');});
   document.querySelectorAll('[data-a]').forEach(b=>b.addEventListener('click',()=>action(b.dataset.a)));
   document.addEventListener('keydown',e=>{const map={ArrowLeft:'left',ArrowRight:'right',ArrowDown:'down',ArrowUp:'rotate',' ':'drop',a:'left',d:'right',s:'down',w:'rotate',p:'pause',Escape:'pause'};if(map[e.key]){e.preventDefault();action(map[e.key]);}if(e.key==='Enter'&&!running)start();});
