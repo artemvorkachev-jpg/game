@@ -8,6 +8,21 @@
 <aside><section class="panel"><h2>Следующая</h2><canvas id="next" width="120" height="90"></canvas></section><section class="panel"><h2>Очки</h2><div class="score" id="score">0</div><div class="stats"><div><small>Линии</small><strong id="lines">0</strong></div><div><small>Уровень</small><strong id="level">1</strong></div><div><small>Рекорд</small><strong id="best">0</strong></div></div></section><section class="panel actions"><button type="button" class="primary" id="start" onclick="window.startTetris && window.startTetris()">▶ Старт / заново</button><button type="button" id="pause">Ⅱ Пауза</button><p class="hint">← → движение · ↑ поворот · пробел — сброс</p></section></aside></div>
 <div class="mobile"><button data-a="left" aria-label="Влево">←</button><button data-a="rotate" aria-label="Повернуть">↻</button><button data-a="right" aria-label="Вправо">→</button><button data-a="down" aria-label="Вниз">↓</button><button class="wide" data-a="drop">Сбросить</button><button class="wide" data-a="pause">Пауза</button></div><div class="status" id="status" role="status" aria-live="polite">Можно играть клавишами или кнопками.</div><footer>Работает в браузере — установка не нужна.</footer></main>
 <script>
+/* Independent click diagnostic and start fallback */
+document.addEventListener('click',function(e){
+  const b=e.target.closest && e.target.closest('#start,#ovbtn');
+  if(!b)return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  if(typeof window.startTetris==='function'){
+    window.startTetris();
+  }else{
+    const s=document.getElementById('status');
+    if(s)s.textContent='Кнопка нажалась, но игровой код не загрузился. Перезагрузи страницу; если сообщение останется, напиши мне.';
+  }
+},true);
+</script>
+<script>
 window.addEventListener('error',e=>{const s=document.getElementById('status');if(s)s.textContent='Ошибка запуска: '+e.message});
 (()=>{const C=10,R=20,S=30,colors={I:'#37d9f5',O:'#ffcf4a',T:'#ad79ff',S:'#5ce39a',Z:'#ff668d',J:'#5b91ff',L:'#ff9c54'},shapes={I:[[1,1,1,1]],O:[[1,1],[1,1]],T:[[0,1,0],[1,1,1]],S:[[0,1,1],[1,1,0]],Z:[[1,1,0],[0,1,1]],J:[[1,0,0],[1,1,1]],L:[[0,0,1],[1,1,1]}};
 const $=id=>document.getElementById(id),cv=$('board'),cx=cv.getContext('2d'),nv=$('next'),nx=nv.getContext('2d');let grid,p,next,score=0,lines=0,level=1,best=0,running=false,paused=false,over=false,last=0,acc=0,raf=0;
