@@ -5,7 +5,7 @@
 </style></head>
 <body><main><header><h1>ТЕТРИС</h1><p>Собирай линии. Побей рекорд!</p></header>
 <div class="layout"><section class="board" aria-label="Игровое поле"><canvas id="board" width="300" height="600"></canvas><div class="overlay" id="overlay"><div><h2 id="ovtitle">Готов играть?</h2><p id="ovtext">Нажми «Старт», чтобы начать</p><button type="button" class="primary" id="ovbtn">Старт</button></div></div></section>
-<aside><section class="panel"><h2>Следующая</h2><canvas id="next" width="120" height="90"></canvas></section><section class="panel"><h2>Очки</h2><div class="score" id="score">0</div><div class="stats"><div><small>Линии</small><strong id="lines">0</strong></div><div><small>Уровень</small><strong id="level">1</strong></div><div><small>Рекорд</small><strong id="best">0</strong></div></div></section><section class="panel actions"><button type="button" class="primary" id="start">▶ Старт / заново</button><button type="button" id="pause">Ⅱ Пауза</button><p class="hint">← → движение · ↑ поворот · пробел — сброс</p></section></aside></div>
+<aside><section class="panel"><h2>Следующая</h2><canvas id="next" width="120" height="90"></canvas></section><section class="panel"><h2>Очки</h2><div class="score" id="score">0</div><div class="stats"><div><small>Линии</small><strong id="lines">0</strong></div><div><small>Уровень</small><strong id="level">1</strong></div><div><small>Рекорд</small><strong id="best">0</strong></div></div></section><section class="panel actions"><button type="button" class="primary" id="start">▶ Старт / продолжить</button><button type="button" id="pause">Ⅱ Пауза</button><p class="hint">← → движение · ↑ поворот · пробел — сброс</p></section></aside></div>
 <div class="mobile"><button data-a="left" aria-label="Влево">←</button><button data-a="rotate" aria-label="Повернуть">↻</button><button data-a="right" aria-label="Вправо">→</button><button data-a="down" aria-label="Вниз">↓</button><button class="wide" data-a="drop">Сбросить</button><button class="wide" data-a="pause">Пауза</button></div><div class="status" id="status" role="status" aria-live="polite">Можно играть клавишами или кнопками.</div><footer>Работает в браузере — установка не нужна.</footer></main>
 <script>
 (function(){
@@ -69,7 +69,7 @@
   }
   function loop(t){if(!running||paused)return;acc+=last?t-last:0;last=t;if(acc>Math.max(90,800-(level-1)*65)){if(!collision(piece,0,1))piece.y++;else lock();acc=0;}draw();raf=requestAnimationFrame(loop);}
   function safeStart(e){if(e)e.preventDefault();start();}
-  $('start').addEventListener('click',safeStart);
+  $('start').addEventListener('click',function(e){if(e)e.preventDefault();if(paused){action('pause');}else{start();}});
   $('ovbtn').addEventListener('click',function(e){e.preventDefault();if(paused)action('pause');else start();});
   $('pause').addEventListener('click',function(e){e.preventDefault();action('pause');});
   document.querySelectorAll('[data-a]').forEach(b=>b.addEventListener('click',()=>action(b.dataset.a)));
