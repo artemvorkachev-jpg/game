@@ -89,10 +89,10 @@ header p{font-size:.75rem;margin-bottom:2px}
   function start(){
     grid=Array.from({length:H},()=>Array(W).fill(''));score=0;lines=0;level=1;
     piece=randomPiece();next=randomPiece();running=true;paused=false;last=0;acc=0;
-    $('overlay').hidden=true;$('status').textContent='Удачи!';$('pause').textContent='Ⅱ Пауза';
+    $('overlay').hidden=true;$('status').textContent='Удачи!';$('pause').textContent='Ⅱ Пауза';$('start').textContent='▶ Старт / заново';
     stats();draw();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
   }
-  function finish(){running=false;showOverlay('Игра окончена','Очки: '+score+' · Линии: '+lines,'Играть ещё');$('status').textContent='Конец игры — попробуй ещё раз.';}
+  function finish(){running=false;paused=false;cancelAnimationFrame(raf);last=0;acc=0;$('pause').textContent='Ⅱ Пауза';$('start').textContent='▶ Играть ещё';showOverlay('Игра окончена','Очки: '+score+' · Линии: '+lines,'Играть ещё');$('status').textContent='Конец игры — нажми «Играть ещё», чтобы начать заново.';}
   function lock(){
     piece.m.forEach((row,y)=>row.forEach((v,x)=>{if(v&&piece.y+y>=0)grid[piece.y+y][piece.x+x]=colors[piece.t];}));
     let n=0;for(let y=H-1;y>=0;y--)if(grid[y].every(Boolean)){grid.splice(y,1);grid.unshift(Array(W).fill(''));n++;y++;}
@@ -110,7 +110,7 @@ header p{font-size:.75rem;margin-bottom:2px}
     if(a==='drop'){while(!collision(piece,0,1))piece.y++;lock();}
     draw();
   }
-  function loop(t){if(!running||paused)return;acc+=last?t-last:0;last=t;if(acc>Math.max(90,800-(level-1)*65)){if(!collision(piece,0,1))piece.y++;else lock();acc=0;}draw();raf=requestAnimationFrame(loop);}
+  function loop(t){if(!running||paused)return;acc+=last?t-last:0;last=t;if(acc>Math.max(90,800-(level-1)*65)){if(!collision(piece,0,1))piece.y++;else lock();acc=0;}draw();if(running&&!paused)raf=requestAnimationFrame(loop);}
   function safeStart(e){if(e)e.preventDefault();start();}
   $('start').addEventListener('click',function(e){if(e)e.preventDefault();if(running){if(paused)action('pause');return;}start();});
   $('ovbtn').addEventListener('click',function(e){e.preventDefault();if(running){if(paused)action('pause');return;}start();});
