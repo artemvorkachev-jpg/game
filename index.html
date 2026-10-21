@@ -11,10 +11,9 @@ header{flex:0 0 auto}
 h1{font-size:clamp(1.5rem,4vh,2.4rem)}
 header p{margin:0 0 5px;font-size:clamp(.8rem,1.8vh,1rem)}
 .layout{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) 175px;gap:10px;align-items:stretch}
-.board{min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:7px;background:radial-gradient(ellipse at center,#242b50 0%,#171b31 65%);}
-.board::before{content:'✦  T E T R I S  ✦';position:absolute;top:18px;left:0;right:0;text-align:center;color:#6f7ab0;font-size:clamp(12px,1.5vw,18px);letter-spacing:.22em;font-weight:800;pointer-events:none}
-.board::after{content:'◆  ◆  ◆  ◆  ◆';position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#46517f;font-size:14px;letter-spacing:.6em;pointer-events:none}
-.board canvas{position:relative;z-index:1;width:auto;height:min(100%,calc(100% - 52px));aspect-ratio:1/2;object-fit:contain;max-width:100%;max-height:100%;flex:0 1 auto;border:2px solid #515d94;border-radius:8px;box-shadow:0 0 24px #7568ff30}
+.board{min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:7px}
+.board::before,.board::after{content:none}
+.board canvas{position:relative;width:auto;height:min(100%,100%);aspect-ratio:1/2;object-fit:contain;max-width:100%;max-height:100%;flex:0 1 auto;border:0;box-shadow:none}
 aside{min-height:0;gap:7px;grid-template-rows:auto 1fr auto}
 .panel{min-height:0;overflow:hidden;padding:8px}
 .panel h2{margin-bottom:5px}
