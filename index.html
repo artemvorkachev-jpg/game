@@ -117,7 +117,14 @@ header p{font-size:.75rem;margin-bottom:2px}
   $('ovbtn').addEventListener('click',function(e){e.preventDefault();if(running){if(paused)action('pause');return;}start();});
   $('pause').addEventListener('click',function(e){e.preventDefault();action('pause');});
   document.querySelectorAll('[data-a]').forEach(b=>b.addEventListener('click',()=>action(b.dataset.a)));
-  document.addEventListener('keydown',e=>{const map={ArrowLeft:'left',ArrowRight:'right',ArrowDown:'down',ArrowUp:'rotate',' ':'drop',a:'left',d:'right',s:'down',w:'rotate',p:'pause',Escape:'pause'};if(map[e.key]){e.preventDefault();action(map[e.key]);}if(e.key==='Enter'&&!running)start();});
+  window.addEventListener('keydown',e=>{
+    const target=e.target;
+    if(target&&(/INPUT|TEXTAREA|SELECT/.test(target.tagName)||target.isContentEditable))return;
+    const map={ArrowLeft:'left',ArrowRight:'right',ArrowDown:'down',ArrowUp:'rotate',Space:'drop',KeyA:'left',KeyD:'right',KeyS:'down',KeyW:'rotate',KeyP:'pause',Escape:'pause'};
+    const a=map[e.code]||({a:'left',d:'right',s:'down',w:'rotate',p:'pause',' ':'drop'}[e.key]);
+    if(a){e.preventDefault();action(a);}
+    if((e.code==='Enter'||e.key==='Enter')&&!running){e.preventDefault();start();}
+  },{capture:true});
   try{best=Number(localStorage.getItem('tetrisBest')||0);}catch(e){}
   grid=Array.from({length:H},()=>Array(W).fill(''));next=randomPiece();stats();draw();
   window.startTetris=start;
